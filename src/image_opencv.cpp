@@ -443,17 +443,44 @@ void show_image_cv(image p, const char *name)
 }
 // ----------------------------------------
 
-/*
-void show_image_cv_ipl(mat_cv *disp, const char *name)
+
+void show_image_cv_ipl(image p, const char *name, IplImage *disp)
 {
-    if (disp == NULL) return;
+    int x,y,k;
+    if(p.c == 3) rgbgr_image(p);
+    //normalize_image(copy);
+
     char buff[256];
+    //sprintf(buff, "%s (%d)", name, windows);
     sprintf(buff, "%s", name);
-    cv::namedWindow(buff, WINDOW_NORMAL);
+
+    int step = disp->widthStep;
+    cvNamedWindow(buff, CV_WINDOW_NORMAL);
+    //cvMoveWindow(buff, 100*(windows%10) + 200*(windows/10), 100*(windows%10));
+    ++windows;
+    for(y = 0; y < p.h; ++y){
+        for(x = 0; x < p.w; ++x){
+            for(k= 0; k < p.c; ++k){
+                disp->imageData[y*step + x*p.c + k] = (unsigned char)(get_pixel(p,x,y,k)*255);
+            }
+        }
+    }
+    if(0){
+        int w = 448;
+        int h = w*p.h/p.w;
+        if(h > 1000){
+            h = 1000;
+            w = h*p.w/p.h;
+        }
+        IplImage *buffer = disp;
+        disp = cvCreateImage(cvSize(w, h), buffer->depth, buffer->nChannels);
+        cvResize(buffer, disp, CV_INTER_LINEAR);
+        cvReleaseImage(&buffer);
+    }
     cvShowImage(buff, disp);
 }
 // ----------------------------------------
-*/
+
 
 void show_image_mat(mat_cv *mat_ptr, const char *name)
 {
