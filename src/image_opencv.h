@@ -1,10 +1,51 @@
 #ifndef IMAGE_OPENCV_H
 #define IMAGE_OPENCV_H
 
-#include "image.h"
 #include "matrix.h"
 
 #ifdef __cplusplus
+#include <opencv2/core.hpp>
+inline cv::Mat image_to_mat(image img)
+{
+    int channels = img.c;
+    int width = img.w;
+    int height = img.h;
+    cv::Mat mat = cv::Mat(height, width, CV_8UC(channels));
+    int step = mat.step;
+
+    for (int y = 0; y < img.h; ++y) {
+        for (int x = 0; x < img.w; ++x) {
+            for (int c = 0; c < img.c; ++c) {
+                float val = img.data[c*img.h*img.w + y*img.w + x];
+                mat.data[y*step + x*img.c + c] = (unsigned char)(val * 255);
+            }
+        }
+    }
+    return mat;
+}
+// ----------------------------------------
+
+inline image mat_to_image(cv::Mat mat)
+{
+    int w = mat.cols;
+    int h = mat.rows;
+    int c = mat.channels();
+    image im = make_image(w, h, c);
+    unsigned char *data = (unsigned char *)mat.data;
+    int step = mat.step;
+    for (int y = 0; y < h; ++y) {
+        for (int k = 0; k < c; ++k) {
+            for (int x = 0; x < w; ++x) {
+                //uint8_t val = mat.ptr<uint8_t>(y)[c * x + k];
+                //uint8_t val = mat.at<Vec3b>(y, x).val[k];
+                //im.data[k*w*h + y*w + x] = val / 255.0f;
+
+                im.data[k*w*h + y*w + x] = data[y*step + x*c + k] / 255.0f;
+            }
+        }
+    }
+    return im;
+}
 extern "C" {
 #endif
 
@@ -23,22 +64,6 @@ int get_width_mat(mat_cv *mat);
 int get_height_mat(mat_cv *mat);
 void release_mat(mat_cv **mat);
 
-// IplImage - to delete
-//int get_width_cv(mat_cv *ipl);
-//int get_height_cv(mat_cv *ipl);
-//void release_ipl(mat_cv **ipl);
-
-// image-to-ipl, ipl-to-image, image_to_mat, mat_to_image
-//mat_cv *image_to_ipl(image im);           // to delete
-//image ipl_to_image(mat_cv* src_ptr);    // to delete
-
-
-// mat_cv *image_to_ipl(image im)
-// image ipl_to_image(mat_cv* src_ptr)
-// cv::Mat ipl_to_mat(IplImage *ipl)
-// IplImage *mat_to_ipl(cv::Mat mat)
-// Mat image_to_mat(image img)
-// image mat_to_image(cv::Mat mat)
 image mat_to_image_cv(mat_cv *mat);
 
 // Window
@@ -55,12 +80,6 @@ void show_image_mat(mat_cv *mat_ptr, const char *name);
 write_cv *create_video_writer(char *out_filename, char c1, char c2, char c3, char c4, int fps, int width, int height, int is_color);
 void write_frame_cv(write_cv *output_video_writer, mat_cv *mat);
 void release_video_writer(write_cv **output_video_writer);
-
-
-//void *open_video_stream(const char *f, int c, int w, int h, int fps);
-//image get_image_from_stream(void *p);
-//image load_image_cv(char *filename, int channels);
-//int show_image_cv(image im, const char* name, int ms);
 
 // Video Capture
 cap_cv* get_capture_video_stream(const char *path);

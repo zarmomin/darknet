@@ -14,7 +14,7 @@
 
 #include <opencv2/core/version.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/opencv.hpp>
+
 #include <opencv2/opencv_modules.hpp>
 
 #include <opencv2/highgui/highgui.hpp>
@@ -85,13 +85,6 @@ extern "C" {
 // ====================================================================
 // cv::Mat
 // ====================================================================
-    image mat_to_image(cv::Mat mat);
-    cv::Mat image_to_mat(image img);
-//    image ipl_to_image(mat_cv* src);
-//    mat_cv *image_to_ipl(image img);
-//    cv::Mat ipl_to_mat(IplImage *ipl);
-//    IplImage *mat_to_ipl(cv::Mat mat);
-
 
 mat_cv *load_image_mat_cv(const char *filename, int flag)
 {
@@ -212,132 +205,7 @@ void release_mat(mat_cv **mat)
     }
 }
 
-// ====================================================================
-// IplImage
-// ====================================================================
-/*
-int get_width_cv(mat_cv *ipl_src)
-{
-    IplImage *ipl = (IplImage *)ipl_src;
-    return ipl->width;
-}
-// ----------------------------------------
 
-int get_height_cv(mat_cv *ipl_src)
-{
-    IplImage *ipl = (IplImage *)ipl_src;
-    return ipl->height;
-}
-// ----------------------------------------
-
-void release_ipl(mat_cv **ipl)
-{
-    IplImage **ipl_img = (IplImage **)ipl;
-    if (*ipl_img) cvReleaseImage(ipl_img);
-    *ipl_img = NULL;
-}
-// ----------------------------------------
-
-// ====================================================================
-// image-to-ipl, ipl-to-image, image_to_mat, mat_to_image
-// ====================================================================
-
-mat_cv *image_to_ipl(image im)
-{
-    int x, y, c;
-    IplImage *disp = cvCreateImage(cvSize(im.w, im.h), IPL_DEPTH_8U, im.c);
-    int step = disp->widthStep;
-    for (y = 0; y < im.h; ++y) {
-        for (x = 0; x < im.w; ++x) {
-            for (c = 0; c < im.c; ++c) {
-                float val = im.data[c*im.h*im.w + y*im.w + x];
-                disp->imageData[y*step + x*im.c + c] = (unsigned char)(val * 255);
-            }
-        }
-    }
-    return (mat_cv *)disp;
-}
-// ----------------------------------------
-
-image ipl_to_image(mat_cv* src_ptr)
-{
-    IplImage* src = (IplImage*)src_ptr;
-    int h = src->height;
-    int w = src->width;
-    int c = src->nChannels;
-    image im = make_image(w, h, c);
-    unsigned char *data = (unsigned char *)src->imageData;
-    int step = src->widthStep;
-    int i, j, k;
-
-    for (i = 0; i < h; ++i) {
-        for (k = 0; k < c; ++k) {
-            for (j = 0; j < w; ++j) {
-                im.data[k*w*h + i*w + j] = data[i*step + j*c + k] / 255.;
-            }
-        }
-    }
-    return im;
-}
-// ----------------------------------------
-
-cv::Mat ipl_to_mat(IplImage *ipl)
-{
-    Mat m = cvarrToMat(ipl, true);
-    return m;
-}
-// ----------------------------------------
-
-IplImage *mat_to_ipl(cv::Mat mat)
-{
-    IplImage *ipl = new IplImage;
-    *ipl = mat;
-    return ipl;
-}
-// ----------------------------------------
-*/
-
-cv::Mat image_to_mat(image img)
-{
-    int channels = img.c;
-    int width = img.w;
-    int height = img.h;
-    cv::Mat mat = cv::Mat(height, width, CV_8UC(channels));
-    int step = mat.step;
-
-    for (int y = 0; y < img.h; ++y) {
-        for (int x = 0; x < img.w; ++x) {
-            for (int c = 0; c < img.c; ++c) {
-                float val = img.data[c*img.h*img.w + y*img.w + x];
-                mat.data[y*step + x*img.c + c] = (unsigned char)(val * 255);
-            }
-        }
-    }
-    return mat;
-}
-// ----------------------------------------
-
-image mat_to_image(cv::Mat mat)
-{
-    int w = mat.cols;
-    int h = mat.rows;
-    int c = mat.channels();
-    image im = make_image(w, h, c);
-    unsigned char *data = (unsigned char *)mat.data;
-    int step = mat.step;
-    for (int y = 0; y < h; ++y) {
-        for (int k = 0; k < c; ++k) {
-            for (int x = 0; x < w; ++x) {
-                //uint8_t val = mat.ptr<uint8_t>(y)[c * x + k];
-                //uint8_t val = mat.at<Vec3b>(y, x).val[k];
-                //im.data[k*w*h + y*w + x] = val / 255.0f;
-
-                im.data[k*w*h + y*w + x] = data[y*step + x*c + k] / 255.0f;
-            }
-        }
-    }
-    return im;
-}
 
 image mat_to_image_cv(mat_cv *mat)
 {
@@ -443,18 +311,6 @@ void show_image_cv(image p, const char *name)
 }
 // ----------------------------------------
 
-/*
-void show_image_cv_ipl(mat_cv *disp, const char *name)
-{
-    if (disp == NULL) return;
-    char buff[256];
-    sprintf(buff, "%s", name);
-    cv::namedWindow(buff, WINDOW_NORMAL);
-    cvShowImage(buff, disp);
-}
-// ----------------------------------------
-*/
-
 void show_image_mat(mat_cv *mat_ptr, const char *name)
 {
     try {
@@ -519,40 +375,6 @@ void release_video_writer(write_cv **output_video_writer)
         cerr << "OpenCV exception: release_video_writer \n";
     }
 }
-
-/*
-void *open_video_stream(const char *f, int c, int w, int h, int fps)
-{
-    VideoCapture *cap;
-    if(f) cap = new VideoCapture(f);
-    else cap = new VideoCapture(c);
-    if(!cap->isOpened()) return 0;
-    if(w) cap->set(CV_CAP_PROP_FRAME_WIDTH, w);
-    if(h) cap->set(CV_CAP_PROP_FRAME_HEIGHT, w);
-    if(fps) cap->set(CV_CAP_PROP_FPS, w);
-    return (void *) cap;
-}
-
-
-image get_image_from_stream(void *p)
-{
-    VideoCapture *cap = (VideoCapture *)p;
-    Mat m;
-    *cap >> m;
-    if(m.empty()) return make_empty_image(0,0,0);
-    return mat_to_image(m);
-}
-
-int show_image_cv(image im, const char* name, int ms)
-{
-    Mat m = image_to_mat(im);
-    imshow(name, m);
-    int c = waitKey(ms);
-    if (c != -1) c = c%256;
-    return c;
-}
-*/
-
 
 // ====================================================================
 // Video Capture
@@ -771,8 +593,6 @@ image get_image_from_stream_resize(cap_cv *cap, int w, int h, int c, mat_cv** in
     if (c>1) cv::cvtColor(new_img, new_img, cv::COLOR_RGB2BGR);
     image im = mat_to_image(new_img);
 
-    //show_image_cv(im, "im");
-    //show_image_mat(*in_img, "in_img");
     return im;
 }
 // ----------------------------------------
@@ -804,8 +624,6 @@ image get_image_from_stream_letterbox(cap_cv *cap, int w, int h, int c, mat_cv**
     free_image(tmp);
     release_mat((mat_cv **)&src);
 
-    //show_image_cv(im, "im");
-    //show_image_mat(*in_img, "in_img");
     return im;
 }
 // ----------------------------------------
@@ -1197,11 +1015,6 @@ image image_data_augmentation(mat_cv* mat, int w, int h,
                 sized *= dexp;
             }
         }
-
-        //std::stringstream window_name;
-        //window_name << "augmentation - " << ipl;
-        //cv::imshow(window_name.str(), sized);
-        //cv::waitKey(0);
 
         if (blur) {
             cv::Mat dst(sized.size(), sized.type());
