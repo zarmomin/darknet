@@ -25,37 +25,23 @@ image ipl_to_image(IplImage* src) {
   ipl_into_image(src, out);
   return out;
 }
-void show_image_cv_ipl(image p, const char *name, IplImage *disp)
-{
-    int x,y,k;
-    if(p.c == 3) rgbgr_image(p);
-    //normalize_image(copy);
+void image_to_ipl(image p, IplImage *disp) {
+  int x,y,k;
+  if(p.c == 3) rgbgr_image(p);
 
+  int step = disp->widthStep;
+
+  for(y = 0; y < p.h; ++y){
+      for(x = 0; x < p.w; ++x){
+          for(k= 0; k < p.c; ++k){
+              disp->imageData[y*step + x*p.c + k] = (unsigned char)(get_pixel(p,x,y,k)*255);
+          }
+      }
+  }
+}
+void show_image_cv_ipl(const char *name, IplImage *disp) {
     char buff[256];
-    //sprintf(buff, "%s (%d)", name, windows);
-    sprintf(buff, "%s", name);
-
-    int step = disp->widthStep;
     cvNamedWindow(buff, CV_WINDOW_NORMAL);
-    //cvMoveWindow(buff, 100*(windows%10) + 200*(windows/10), 100*(windows%10));
-    for(y = 0; y < p.h; ++y){
-        for(x = 0; x < p.w; ++x){
-            for(k= 0; k < p.c; ++k){
-                disp->imageData[y*step + x*p.c + k] = (unsigned char)(get_pixel(p,x,y,k)*255);
-            }
-        }
-    }
-    if(0){
-        int w = 448;
-        int h = w*p.h/p.w;
-        if(h > 1000){
-            h = 1000;
-            w = h*p.w/p.h;
-        }
-        IplImage *buffer = disp;
-        disp = cvCreateImage(cvSize(w, h), buffer->depth, buffer->nChannels);
-        cvResize(buffer, disp, CV_INTER_LINEAR);
-        cvReleaseImage(&buffer);
-    }
+    sprintf(buff, "%s", name);
     cvShowImage(buff, disp);
 }

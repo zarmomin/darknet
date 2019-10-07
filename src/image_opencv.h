@@ -149,7 +149,8 @@ void destroy_all_windows_cv();
 #include "opencv2/imgproc/imgproc_c.h"
 void ipl_into_image(IplImage* src, image im);
 image ipl_to_image(IplImage* src);
-void show_image_cv_ipl(image p, const char *name, IplImage *disp);
+void image_to_ipl(image p, IplImage *disp);
+void show_image_cv_ipl(const char *name, IplImage *disp);
 #endif
 #endif
 
